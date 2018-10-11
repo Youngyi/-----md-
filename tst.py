@@ -63,15 +63,31 @@ def penetration(file):
     table = pd.pivot_table(df_ori[selected_columns], values=aggregated_columns, index=['day'], aggfunc=np.sum)
     # print 'table:', table
     df_key_index = pd.DataFrame(index=table.index)
-    for column_name in [
-                        'like_video_like_homepage_hot_uv','like_video_like_homepage_follow_uv','like_video_like_homepage_fresh_uv',
-                        'name_homepage_hot_uv'
+    for column_name in ['session_duration',
+                        'session_count',
+                        'video_play_uv',
+                        'video_play_homepage_hot_uv',
+                        'video_play_finish_uv',
+                        'like_video_uv',
+                        'comment_video_uv',
+                        'share_video_uv',
+                        'publish_start_uv',
+                        'head_homepage_hot_uv',
+                        'name_homepage_hot_uv',
                         ]:
         df = table[column_name] / table['user_count']
         df_key_index = pd.concat([df_key_index, df], axis=1, sort=False)
-    df_key_index.columns = [
-                            '点赞渗透率_hot','点赞渗透率_follow','点赞渗透率_fresh',
-                                                        '推荐页点击姓名渗透率'
+    df_key_index.columns = ['人均时长',
+                            '人均启动数',
+                            '播放渗透率',
+                            '推荐页播放渗透率',
+                            '播放完成渗透率',
+                            '点赞渗透率',
+                            '评论渗透率',
+                            '分享渗透率',
+                            '投稿渗透率',
+                            '推荐页点击头像渗透率',
+                            '推荐页点击姓名渗透率'
                             ]
     # print df_key_index
     return df_key_index
@@ -83,21 +99,40 @@ def get_key_index_active_level(file):
 
         df_key_index_a = pd.DataFrame(index=table_a.index)
         for column_name, column_name_uv in zip(
-                [
-                 'like_video_like_homepage_hot','like_video_like_homepage_follow','like_video_like_homepage_fresh',
-                 
+                ['video_play',
+                 'video_play_homepage_hot',
+                 'like_video',
+                 'comment_video',
+                 'share_video',
+                 'publish_start',
+                 'head_homepage_hot',
                  'name_homepage_hot',
-                 
+                 'play_time',
+                 'play_time_homepage_hot'
                  ],
-                [
-                 'like_video_like_homepage_hot_uv','like_video_like_homepage_follow_uv','like_video_like_homepage_fresh_uv',
-                 'name_homepage_hot_uv'
+                ['video_play_uv',
+                 'video_play_homepage_hot_uv',
+                 'like_video_uv',
+                 'comment_video_uv',
+                 'share_video_uv',
+                 'publish_start_uv',
+                 'head_homepage_hot_uv',
+                 'name_homepage_hot_uv',
+                 'play_time_uv',
+                 'play_time_homepage_hot_uv'
                  ]):
             df = table_a[column_name] / table_a[column_name_uv]
             df_key_index_a = pd.concat([df_key_index_a, df], axis=1, sort=False)
-        df_key_index_a.columns = [
-                                '点赞pv/uv_hot','点赞pv/uv_follow','点赞pv/uv_fresh',
+        df_key_index_a.columns = ['视频播放pv/uv',
+                                '推荐页视频播放pv/uv',
+                                '点赞pv/uv',
+                                '评论pv/uv',
+                                '分享pv/uv',
+                                '投稿pv/uv',
+                                '推荐页点击头像pv/uv',
                                 '推荐页点击名字pv/uv',
+                                '播放时长sum/uv',
+                                '推荐页播放时长sum/uv'
                                 ]
         return df_key_index_a
 def compare_relative_difference(index_grey, index_old):
@@ -152,7 +187,10 @@ old_penetration = penetration(greyDate_old)
 relative_difference_penetration = compare_relative_difference(grey_penetration, old_penetration)
 relative_difference_penetration.to_csv(output_penetration, encoding='utf_8_sig')
 relative_difference_penetration.plot(figsize=(10,10),title='渗透率')
-plt.legend(loc='upper right')
+legend = plt.legend(loc='upper right')
+frame = legend.get_frame()
+frame.set_alpha(0.1)
+frame.set_facecolor('none')
 my_x_ticks = np.arange(-7, 7, 1)
 plt.xticks(my_x_ticks)
 l = plt.axvline(x=0,linewidth=2,ls='dotted', color='k')
@@ -163,7 +201,10 @@ index_old_active_level = get_key_index_active_level(greyDate_old)
 relative_difference_active_level = compare_relative_difference(index_grey_active_level, index_old_active_level)
 relative_difference_active_level.to_csv(output_active_level, encoding='utf_8_sig')
 relative_difference_active_level.plot(figsize=(10,10),title='人均指标')
-plt.legend(loc='upper left')
+legend = plt.legend(loc='upper right')
+frame = legend.get_frame()
+frame.set_alpha(0.1)
+frame.set_facecolor('none')
 my_x_ticks = np.arange(-7, 7, 1)
 plt.xticks(my_x_ticks)
 l = plt.axvline(x=0,linewidth=2,ls='dotted', color='k')
@@ -201,11 +242,14 @@ for index in dir_path:
         relative_difference_penetration.to_csv(output_penetration, encoding='utf_8_sig')
         relative_difference_penetration.to_csv(output_penetration_single, mode='a', header=True, encoding='utf_8_sig')
         relative_difference_penetration.plot(figsize=(10,10),title=pth[-1]+"_"'渗透率')
-        plt.legend(loc='upper right')
+        legend = plt.legend(loc='upper right')
+        frame = legend.get_frame()
+        frame.set_alpha(0.1)
+        frame.set_facecolor('none')
         my_x_ticks = np.arange(-7, 7, 1)
         plt.xticks(my_x_ticks)
         l = plt.axvline(x=0,linewidth=2,ls='dotted', color='k')
-        plt.savefig(pth[-1]+"_""penetra_rate.jpg")
+        plt.savefig(pth[-1]+"_""penetra_rate.jpg", transparent=True)
 
         index_grey_active_level = get_key_index_active_level(file_grey)
         index_old_active_level = get_key_index_active_level(file_old)
@@ -213,11 +257,12 @@ for index in dir_path:
         relative_difference_active_level.to_csv(output_active_level_single, mode='a', header=True, encoding='utf_8_sig')
         relative_difference_active_level.to_csv(output_active_level, encoding='utf_8_sig')
         relative_difference_active_level.plot(figsize=(10,10),title=pth[-1]+"_"+'人均指标')
-        plt.legend(loc='upper left')
+        legend = plt.legend(loc='upper right')
+        frame = legend.get_frame()
+        frame.set_alpha(0.1)
+        frame.set_facecolor('none')
         my_x_ticks = np.arange(-7, 7, 1)
         plt.xticks(my_x_ticks)
-        for idx in ['灰度用户','大盘用户']:
-            demo_test(remain_difference[idx])
         l = plt.axvline(x=0,linewidth=2,ls='dotted', color='k')
         plt.savefig(pth[-1]+"_"+"pvuv_rate.jpg")
 
